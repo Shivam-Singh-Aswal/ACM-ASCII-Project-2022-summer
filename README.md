@@ -1,5 +1,6 @@
 # ACM-ASCII-Project-2022-summer 
 This project was completed in the summer vacation 2022. It is based on the conversion of a regular pixel image to ASCII art, both to grayscale and colored.
+Further it has also the programs to convert a video file to ascii art video.
 
 #Language Used: 
 Python
