@@ -1,14 +1,17 @@
+"""
+This program converts any image media to ASCII art image (RGB and GrayScale) 
+"""
+
 import numpy as np 
 import cv2
 from PIL import Image, ImageDraw, ImageOps, ImageFont
-import pdb 
 
 #Setting the folder path for opening image
 FOLDER_PATH = "images"
 
 
 #The list of ascii character in increasing order of intensity
-#HIgher index represents that it will used to replace high intensity pixel
+#Higher index represents that it will used to replace high intensity pixel
 ASCII_CHARLIST = "$@B%8&WM#oahkbdpqwmZO0QLCJUYXzcvunxrjft*/\\|()1{}[]?-_+~<>i!lI;:,\"^`'. "
 #ASCII_CHARLIST = "@B&ma+*:. "
 
@@ -19,9 +22,11 @@ scale = 2
 space = scale*char_size[0]-char_size[1]
 
 
-"""The GrayScale ASCII Image"""
+"""
+The GrayScale ASCII Image
+"""
 
-#Setting the background color
+#Getting the background color code 
 def giveGray_bg_color(color):
     bg_color_codes = {
         "black":0,
@@ -33,9 +38,15 @@ def giveGray_bg_color(color):
 #Get intensity of pixel group around the given point for both RGB and GrayScale images 
 def getGroupIntensity(image, groupSize, point):
     """
-    Returns the average intensity of the grouped pixels
+    Input: 
+        image       : nd array - pixel value array of the image 
+        groupSize   : tuple - the no of rows and columns in the group 
+        point       : tuple - coordinates of the point 
+    Return:
+        intensity   : int/array - the average intensity of the group 
     """
-    intensity = image[point[0]][point[1]]*0 #initialise the return value to zero scalar or vector 
+    #initialise the return value to zero scalar or vector
+    intensity = image[point[0]][point[1]]*0  
 
     #Define a group using group size values (limited by image size)
     endRow = min(point[0]+groupSize[0], image.shape[0])
@@ -50,9 +61,14 @@ def getGroupIntensity(image, groupSize, point):
 
     return intensity
 
-def createGrayASCII(img, groupSize):
+#Returns the ascii character image in grayscale
+def createGray_ASCII(img, groupSize):
     """
-    Returns the ascii character image
+    Input:
+        img         : nd array - pixel value array of the image 
+        groupSize   : tuple - the no of rows and columns in the group
+    Return:
+        asciiImage  : Image object - the ascii art of the original image  
     """
     image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  #Converting the color image to grayscale
 
@@ -60,9 +76,11 @@ def createGrayASCII(img, groupSize):
     bg_color = giveGray_bg_color("black")
 
     #The output image resolution
+    #The output image resolution (char_size and groupSize have entries as (xValue, yValue))
+    #image.shape returns (height, width), whereas Image.new takes input as (width, height)
     out_size = (image.shape[1]//groupSize[0]*char_size[0]*scale, image.shape[0]//groupSize[1]*(char_size[1]+space))
-    asciiImage = Image.new('L', out_size, bg_color)  #Create a image handle of required size
-    draw = ImageDraw.Draw(asciiImage)
+    asciiImage = Image.new('L', out_size, bg_color) #Create a image handle of required size
+    draw = ImageDraw.Draw(asciiImage)               #draw handle to draw characters on the image
 
     #For each pixel-Group in image provide an ascii character based on the intensity (GrayScale)
     for i in range(image.shape[0]//groupSize[0]):
@@ -72,17 +90,19 @@ def createGrayASCII(img, groupSize):
             #pick out apt. index corresponding to avg intensity
             index = round(intensity*(len(ASCII_CHARLIST)-1)/255)
             if bg_color >= 150:
-                character = ASCII_CHARLIST[index] #if bg is white then more area char ocuupies lower index, as usual
+                character = ASCII_CHARLIST[index] #if bg is whitish then more area char occupies lower index, as usual
             else:
-                character = ASCII_CHARLIST[-(index+1)]  #if bg is black then more area char is higher in index
+                character = ASCII_CHARLIST[-(index+1)]  #if bg is blackish then more area char is higher in index
             row = row + character*scale
-        draw.text((0,(char_size[1]+space)*i), row, fill = 255-bg_color, font = FONT)
+        draw.text((0,(char_size[1]+space)*i), row, fill = 255-bg_color, font = FONT) #Write the row on image
 
     return asciiImage
 
 
-"""The RGB ASCII Image"""
-#Creating ascii image for RGB
+"""
+The RGB ASCII Image
+"""
+
 def giveRGB_bg_color(color):
     bg_color_codes = {
         "black":(0, 0, 0),
@@ -91,9 +111,14 @@ def giveRGB_bg_color(color):
     }
     return np.array(bg_color_codes[color])
 
+#Returns the ascii character image in grayscale
 def createRGB_ASCII(image, groupSize):
     """
-    Returns the ascii character colored image
+    Input:
+        img         : nd array - pixel value array of the image 
+        groupSize   : tuple - the no of rows and columns in the group
+    Return:
+        asciiImage  : Image object - the ascii art of the original image  
     """
     #The background color
     white = np.array([255, 255, 255])
@@ -110,7 +135,7 @@ def createRGB_ASCII(image, groupSize):
         for j in range(image.shape[1]//groupSize[1]):
             #intensity is in 'BGR' and we require 'RGB' so invert it
             intensity = getGroupIntensity(image, groupSize, (i*groupSize[0], j*groupSize[1])).astype(int)
-            color = tuple(list(intensity)[::-1])
+            color = tuple(list(intensity)[::-1])  #inversion
             index = round(max(intensity)*(len(ASCII_CHARLIST)-1)/255)
             character = ASCII_CHARLIST[index]
             
@@ -132,14 +157,14 @@ def main():
 
     #Dictionary mapping word to apt function
     getFunc = {
-        "gray": createGrayASCII,
+        "gray": createGray_ASCII,
         "rgb": createRGB_ASCII
     }
 
     #Call the required function 
     asciiImage = getFunc[convertTo.lower()](img, groupSize)
 
-    #Saving the results to a text file
+    #Saving the results to a image file
     asciiImage.save("AsciiImages/"+image_name)
 
 
