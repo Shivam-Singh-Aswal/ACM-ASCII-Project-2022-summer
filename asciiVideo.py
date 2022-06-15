@@ -7,15 +7,21 @@ import imageToASCII
 #Function to convert the video file into a list of frames 
 def getFramesFromVideo(video_path, reqFrameRate):
 	"""
-	This function takes video file name and required frame rate as input and outputs frame list
+	Inputs:
+		video_file_path 	: string 
+		frame_rate_required : int/float
+	Return:
+		frameBook : list of all the frames from original video
 	"""
+	#Opening the file 
 	video = cv2.VideoCapture(video_path)
+	#Extracting the frame rate value of the original video
 	frameRate = video.get(cv2.CAP_PROP_FPS)
+
 	frameBook = []
 
-	#Defining the step value to jump frames (+1 since it shouldn't return zero)
+	#Defining the step value, to jump frames (+1 since step can't be zero)
 	step = int(frameRate/reqFrameRate) + 1 
-	#print(step)
 
 	while True:
 		working, frame = video.read()  	#Get the current frame 
@@ -25,18 +31,23 @@ def getFramesFromVideo(video_path, reqFrameRate):
 				video.read()   			#Omit the extra frames 
 		else:
 			break
-
 	return frameBook
 
 
 #Function to convert the frames of array to a video of desired frame rate
 def getVideoFromFrames(frameBook, frameRate, frameSize, outPath):
 	"""
-	Takes array of ascii frames, frame rate of ascii video and the file location where video is to be saved 
-	(with the name of output video)	as input and outputs boolean value representing action completed.
+	Inputs:
+		frameBook : list - the list of all the ascii frames 
+		frameRate : int/float - desired fps for the output video
+		frameSize : tuple - the dimensions of the output video frames'
+		outPath   : string - the destination folder
+	Return:
+		Boolean value : true if succesfull, otherwise false  
 	"""
-	fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-	writer = cv2.VideoWriter(outPath, fourcc, float(frameRate), frameSize, 1)  #Creating the video handle 
+	#define the codec for resulting video 
+	codec = cv2.VideoWriter_fourcc(*'MJPG')
+	writer = cv2.VideoWriter(outPath, codec, float(frameRate), frameSize, 1)  #Creating the video handle 
 	#Add the frames to the video 
 	for frame in frameBook:
 		writer.write(frame)
@@ -46,25 +57,30 @@ def getVideoFromFrames(frameBook, frameRate, frameSize, outPath):
 #main 
 def main():
 	#Parameters for ascii Video
-	frameRate = 5
 	outPath = "AsciiVideos/newtons_balls.avi"
+	frameRate = 5	   	
+	frameSize = None 	
+	asciiFrameBook = []   #This is the list of all the frames converted to ascii art image
 
 	#Generate the Ascii frame book
 	frameBook = getFramesFromVideo("videos/newtons_balls.mp4", frameRate)
-	print("Video converted to pixel frames! Size= ", len(frameBook))
+	print("Video converted to pixel frames! \nSize = ", len(frameBook))   #Print the status 
+	
 	groupSize = (5,5)
-	asciiFrameBook = []
-
+	 
+	#Convert each frame to ascii Image 
 	counter = 0 
 	for img in frameBook:
 		counter += 1
 		asciiFrameBook.append(asarray(imageToASCII.createRGB_ASCII(img, groupSize)))
 		print("Frame {0} converted".format(counter))
 
-	print(asciiFrameBook[0].shape)
-	frameSize = asciiFrameBook[0].shape[1::-1]
-	print(frameSize)
-	#Print the status 
+	
+	#Stitch all the frames together to form a video and print the status 
+	#The frame dimensions are inverted to have the form (width, height), instead of (height, width) 
+	#as required by the cv2.VideoWriter function 
+	frameSize = asciiFrameBook[0].shape[1::-1]   
+	print("Frame-Size is : ", frameSize)
 	print(getVideoFromFrames(asciiFrameBook, frameRate, frameSize, outPath))
 
 
