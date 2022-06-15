@@ -8,6 +8,7 @@ FOLDER_PATH = "images"
 
 
 #The list of ascii character in increasing order of intensity
+#HIgher index represents that it will used to replace high intensity pixel
 ASCII_CHARLIST = "$@B%8&WM#oahkbdpqwmZO0QLCJUYXzcvunxrjft*/\\|()1{}[]?-_+~<>i!lI;:,\"^`'. "
 #ASCII_CHARLIST = "@B&ma+*:. "
 #ASCII_CHARLIST = "@@@@@@@@"
@@ -22,7 +23,7 @@ space = scale*char_size[0]-char_size[1]
 """The GrayScale ASCII Image"""
 
 #Setting the background color
-def give_bg_color(color):
+def giveGray_bg_color(color):
     bg_color_codes = {
         "black":0,
         "white":255,
@@ -72,10 +73,9 @@ def createGrayASCII(img, groupSize):
             #pick out apt. index corresponding to avg intensity
             index = round(intensity*(len(ASCII_CHARLIST)-1)/255)
             if bg_color >= 150:
-                character = ASCII_CHARLIST[index]
+                character = ASCII_CHARLIST[index] #if bg is white then more area char ocuupies lower index, as usual
             else:
-                character = ASCII_CHARLIST[-(index+1)]
-            #draw.text((scale*j*(char_size[0]),(char_size[1]+space)*i), character*scale, fill = 255-bg_color, font = FONT)
+                character = ASCII_CHARLIST[-(index+1)]  #if bg is black then more area char is higher in index
             row = row + character*scale
         draw.text((0,(char_size[1]+space)*i), row, fill = 255-bg_color, font = FONT)
 
@@ -83,34 +83,22 @@ def createGrayASCII(img, groupSize):
 
 
 """The RGB ASCII Image"""
-
-def main(image_name):
-    #Opening the image file
-    path = FOLDER_PATH + '/' + image_name  #Path of the image file
-    img = cv2.imread(path, 1)  #open the image
-    print(img.shape)
-
-    #Image resolution and Pixel group sizing and scale
-    groupSize = eval(input())
-
-    #Creating black and white ascii image of the input image 
-    #asciiImage = createGrayASCII(img, groupSize)
-
-    #Creating coloured ascii image of the input image 
-    asciiImage = createRGB_ASCII(img, groupSize)
-
-    #Saving the results to a text file
-    asciiImage.save("AsciiImages/"+image_name)
-
-
 #Creating ascii image for RGB
+def giveRGB_bg_color(color):
+    bg_color_codes = {
+        "black":(0, 0, 0),
+        "white":(255, 255, 255),
+        "grey":(40, 40, 40)
+    }
+    return np.array(bg_color_codes[color])
+
 def createRGB_ASCII(image, groupSize):
     """
     Returns the ascii character colored image
     """
     #The background color
     white = np.array([255, 255, 255])
-    bg_color = np.array([0,0,0])
+    bg_color = giveRGB_bg_color("black")
 
     #The output image resolution
     out_size = (image.shape[1]//groupSize[0]*char_size[0]*scale, image.shape[0]//groupSize[1]*(char_size[1]+space))
@@ -123,13 +111,36 @@ def createRGB_ASCII(image, groupSize):
             #intensity is in 'BGR' and we require 'RGB' so invert it
             intensity = getGroupIntensity(image, groupSize, (i*groupSize[0], j*groupSize[1])).astype(int)
             color = tuple(list(intensity)[::-1])
-            index = round(0.33*sum(intensity)*(len(ASCII_CHARLIST)-1)/255)
+            index = round(max(intensity)*(len(ASCII_CHARLIST)-1)/255)
             character = ASCII_CHARLIST[index]
             
             draw.text((scale*j*(char_size[0]),(char_size[1]+space)*i), character*scale, fill = color, font = FONT)
     return asciiImage
 
 
-print("Name of file: ", end = "")
-main(input())
+def main():
+    #Opening the image file
+    image_name = input("Name of file: ")
+    convertTo = input("RGB or Gray?: ")
+    path = FOLDER_PATH + '/' + image_name  #Path of the image file
+    img = cv2.imread(path, 1)  #open the image
+
+    #Image resolution and Pixel group sizing and scale
+    groupSize = eval(input("SizeOfGroup: "))
+
+    #Dictionary mapping word to apt function
+    getFunc = {
+        "gray": createGrayASCII,
+        "RGB": createRGB_ASCII
+    }
+
+    #Call the required function 
+    asciiImage = getFunc[convertTo.lower()][img, groupSize]
+
+    #Saving the results to a text file
+    asciiImage.save("AsciiImages/"+image_name)
+
+
+#Call the main function 
+main()
 
