@@ -1,7 +1,10 @@
+"""
+This program converts any video media to ASCII art video 
+"""
+
 import cv2
 from numpy import asarray
-from PIL import Image
-import imageToASCII 
+from imageToASCII import createRGB_ASCII, createGray_ASCII
 
 
 #Function to convert the video file into a list of frames 
@@ -85,4 +88,5 @@ def main():
 
 
 #Call the main function 
-main()
+if __name__ == "main":
+	main()
