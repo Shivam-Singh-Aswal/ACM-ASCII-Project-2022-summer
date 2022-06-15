@@ -11,10 +11,9 @@ FOLDER_PATH = "images"
 #HIgher index represents that it will used to replace high intensity pixel
 ASCII_CHARLIST = "$@B%8&WM#oahkbdpqwmZO0QLCJUYXzcvunxrjft*/\\|()1{}[]?-_+~<>i!lI;:,\"^`'. "
 #ASCII_CHARLIST = "@B&ma+*:. "
-#ASCII_CHARLIST = "@@@@@@@@"
 
 #Setting font type and setting up scale to make square pixel
-FONT = ImageFont.truetype("DejaVuSansMono.ttf", 20)
+FONT = ImageFont.truetype("fonts/DejaVuSansMono.ttf", 20)
 char_size = FONT.getsize("A")
 scale = 2
 space = scale*char_size[0]-char_size[1]
@@ -58,7 +57,7 @@ def createGrayASCII(img, groupSize):
     image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  #Converting the color image to grayscale
 
     #The background color
-    bg_color = give_bg_color("black")
+    bg_color = giveGray_bg_color("black")
 
     #The output image resolution
     out_size = (image.shape[1]//groupSize[0]*char_size[0]*scale, image.shape[0]//groupSize[1]*(char_size[1]+space))
@@ -100,7 +99,8 @@ def createRGB_ASCII(image, groupSize):
     white = np.array([255, 255, 255])
     bg_color = giveRGB_bg_color("black")
 
-    #The output image resolution
+    #The output image resolution (char_size and groupSize have entries as (xValue, yValue))
+    #image.shape returns (height, width), whereas Image.new takes input as (width, height)
     out_size = (image.shape[1]//groupSize[0]*char_size[0]*scale, image.shape[0]//groupSize[1]*(char_size[1]+space))
     asciiImage = Image.new('RGB', out_size, tuple(bg_color))  #Create a image handle of required size
     draw = ImageDraw.Draw(asciiImage)
@@ -125,22 +125,25 @@ def main():
     path = FOLDER_PATH + '/' + image_name  #Path of the image file
     img = cv2.imread(path, 1)  #open the image
 
-    #Image resolution and Pixel group sizing and scale
-    groupSize = eval(input("SizeOfGroup: "))
+    #Pixel group sizing based on required output resolution
+    print("Input Image size: ", img.shape[:2])
+    requiredOutSize = eval(input("Required Output size (height, width): "))
+    groupSize = (img.shape[1]//requiredOutSize[1], img.shape[0]//requiredOutSize[0])
 
     #Dictionary mapping word to apt function
     getFunc = {
         "gray": createGrayASCII,
-        "RGB": createRGB_ASCII
+        "rgb": createRGB_ASCII
     }
 
     #Call the required function 
-    asciiImage = getFunc[convertTo.lower()][img, groupSize]
+    asciiImage = getFunc[convertTo.lower()](img, groupSize)
 
     #Saving the results to a text file
     asciiImage.save("AsciiImages/"+image_name)
 
 
 #Call the main function 
-main()
+if __name__ == "main":
+    main()
 
