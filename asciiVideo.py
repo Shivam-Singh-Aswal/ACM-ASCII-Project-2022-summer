@@ -60,13 +60,14 @@ def getVideoFromFrames(frameBook, frameRate, frameSize, outPath):
 #main 
 def main():
 	#Parameters for ascii Video
-	outPath = "AsciiVideos/newtons_balls.avi"
+	outPath = "videos/ascii_{0}.avi".format(video_name.split['.'][0])
 	frameRate = 5	   	
 	frameSize = None 	
 	asciiFrameBook = []   #This is the list of all the frames converted to ascii art image
 
 	#Generate the Ascii frame book
-	frameBook = getFramesFromVideo("videos/newtons_balls.mp4", frameRate)
+	video_name = "sample_video.mp4"
+	frameBook = getFramesFromVideo("videos/ascii_{0}".format(video_name), frameRate)
 	print("Video converted to pixel frames! \nSize = ", len(frameBook))   #Print the status 
 	
 	groupSize = (5,5)

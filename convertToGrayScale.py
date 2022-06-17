@@ -15,7 +15,6 @@ Functions Definitions
 def toGrayScale(image, algo= "average"):
     fn = funcPick[algo] #Pick one conversion method 
     transform = []      #The grayscale image array 
-
     for i in range(image.shape[0]):
         rowEntry = []
         for j in range(image.shape[1]):
@@ -52,7 +51,7 @@ funcPick = {
 
 #main
 def main()
-    path = "minion.jpg"
+    path = input("Enter the image path: ")
 
     #THe original image 
     originalImage = cv2.imread(path, 1)
