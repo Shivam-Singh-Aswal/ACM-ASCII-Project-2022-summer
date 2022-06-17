@@ -12,8 +12,9 @@ FOLDER_PATH = "images"
 
 #The list of ascii character in increasing order of intensity
 #Higher index represents that it will used to replace high intensity pixel
-ASCII_CHARLIST = "$@B%8&WM#oahkbdpqwmZO0QLCJUYXzcvunxrjft*/\\|()1{}[]?-_+~<>i!lI;:,\"^`'. "
-#ASCII_CHARLIST = "@B&ma+*:. "
+#Choose the character list that you think is best 
+#ASCII_CHARLIST = "$@B%8&WM#oahkbdpqwmZO0QLCJUYXzcvunxrjft*/\\|()1{}[]?-_+~<>i!lI;:,\"^`'. "
+ASCII_CHARLIST = "@B&ma+*:. "
 
 #Setting font type and setting up scale to make square pixel
 FONT = ImageFont.truetype("fonts/DejaVuSansMono.ttf", 20)
@@ -73,7 +74,12 @@ def createGray_ASCII(img, groupSize):
     image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  #Converting the color image to grayscale
 
     #The background color
+    #Note that when a pixel is white corresponding ascii character is " " (blank) but if the bg is
+    #black it will be black color which is wrong so in that case we need to invert " " to "@" (that is)
+    #replacing the character of least coverage area with that of most.
+    bg_color_name = "black"
     bg_color = giveGray_bg_color("black")
+    invert = int(bg_color_name == "black")  
 
     #The output image resolution
     #The output image resolution (char_size and groupSize have entries as (xValue, yValue))
@@ -88,11 +94,12 @@ def createGray_ASCII(img, groupSize):
         for j in range(image.shape[1]//groupSize[1]):
             intensity = getGroupIntensity(image, groupSize, (i*groupSize[0], j*groupSize[1]))
             #pick out apt. index corresponding to avg intensity
-            index = round(intensity*(len(ASCII_CHARLIST)-1)/255)
-            if bg_color >= 150:
+            index = round((invert*255-intensity)*(len(ASCII_CHARLIST)-1)/255)
+            character = ASCII_CHARLIST[index]
+            """if bg_color >= 150:
                 character = ASCII_CHARLIST[index] #if bg is whitish then more area char occupies lower index, as usual
             else:
-                character = ASCII_CHARLIST[-(index+1)]  #if bg is blackish then more area char is higher in index
+                character = ASCII_CHARLIST[-(index+1)]  #if bg is blackish then more area char is higher in index"""
             row = row + character*scale
         draw.text((0,(char_size[1]+space)*i), row, fill = 255-bg_color, font = FONT) #Write the row on image
 
@@ -121,8 +128,9 @@ def createRGB_ASCII(image, groupSize):
         asciiImage  : Image object - the ascii art of the original image  
     """
     #The background color
-    white = np.array([255, 255, 255])
+    bg_color_name = "black"
     bg_color = giveRGB_bg_color("black")
+    invert = int(bg_color_name == "black") #See createGray_ASCII for info on this variable
 
     #The output image resolution (char_size and groupSize have entries as (xValue, yValue))
     #image.shape returns (height, width), whereas Image.new takes input as (width, height)
@@ -136,7 +144,8 @@ def createRGB_ASCII(image, groupSize):
             #intensity is in 'BGR' and we require 'RGB' so invert it
             intensity = getGroupIntensity(image, groupSize, (i*groupSize[0], j*groupSize[1])).astype(int)
             color = tuple(list(intensity)[::-1])  #inversion
-            index = round(max(intensity)*(len(ASCII_CHARLIST)-1)/255)
+            index = round((invert*255-0.33*sum(intensity))*(len(ASCII_CHARLIST)-1)/255)
+            #index = round((510/(1+np.exp(-0.005*max(intensity)))-256)*(len(ASCII_CHARLIST)-1)/255)  #sigmoid intensity distribution
             character = ASCII_CHARLIST[index]
             
             draw.text((scale*j*(char_size[0]),(char_size[1]+space)*i), character*scale, fill = color, font = FONT)
@@ -163,9 +172,10 @@ def main():
 
     #Call the required function 
     asciiImage = getFunc[convertTo.lower()](img, groupSize)
+    print(asciiImage)
 
     #Saving the results to a image file
-    asciiImage.save("AsciiImages/"+image_name)
+    asciiImage.save("images/ascii_"+image_name)
 
 
 #Call the main function 
