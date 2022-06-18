@@ -65,8 +65,14 @@ def main():
 	frameSize = None 	
 	asciiFrameBook = []   #This is the list of all the frames converted to ascii art image
 
+	#RGB or Grayscale 
+	chooseFunc = {
+		"rgb" : imageToASCII.createRGB_ASCII,
+		"gray": imageToASCII.createGray_ASCII
+	}
 	#Generate the Ascii frame book
-	video_name = "sample_video.mp4"
+	video_name = input("Enter video file name (with extension): ")
+	convertTo = input("RGB or Gray: ").lower()
 	frameBook = getFramesFromVideo("videos/ascii_{0}".format(video_name), frameRate)
 	print("Video converted to pixel frames! \nSize = ", len(frameBook))   #Print the status 
 	
@@ -74,9 +80,10 @@ def main():
 	 
 	#Convert each frame to ascii Image 
 	counter = 0 
+	fn = chooseFunc[convertTo]
 	for img in frameBook:
 		counter += 1
-		asciiFrameBook.append(asarray(imageToASCII.createRGB_ASCII(img, groupSize)))
+		asciiFrameBook.append(asarray(fn(img, groupSize)))
 		print("Frame {0} converted".format(counter))
 
 	
